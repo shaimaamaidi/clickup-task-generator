@@ -5,8 +5,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from src.domain.ports.output.user_email_repository_port import UserEmailRepositoryPort
 
-class ExcelMailReader:
+
+class ExcelMailReader(UserEmailRepositoryPort):
     """
     Classe pour lire un fichier Excel contenant des colonnes USERNAME et MAIL
     et retourner un dictionnaire {username: mail}.

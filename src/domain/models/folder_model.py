@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from src.clickup_list_model import ClickUpList
+from src.domain.models.clickup_list_model import ClickUpList
 
 
 @dataclass

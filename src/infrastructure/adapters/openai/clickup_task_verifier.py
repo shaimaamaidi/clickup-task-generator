@@ -4,13 +4,14 @@ from typing import List
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
-from src.task_model import Task
-from src.generated_task_model import GeneratedTask
-from src.verification_result_model import VerificationResult
-from src.verification_result_list_model import VerificationResultList
+from src.domain.models.task_model import Task
+from src.domain.models.generated_task_model import GeneratedTask
+from src.domain.models.verification_result_model import VerificationResult
+from src.domain.models.verification_result_list_model import VerificationResultList
+from src.domain.ports.output.llm_task_verification_port import TaskVerificationPort
 
 
-class ClickUpTaskVerifier:
+class ClickUpTaskVerifier(TaskVerificationPort):
     SYSTEM_PROMPT = """
 You are a project management assistant responsible for verifying tasks before they are created or updated in ClickUp.
 

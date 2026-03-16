@@ -4,11 +4,12 @@ from typing import List, Dict
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
-from src.generated_task_model import GeneratedTask
-from src.response_generator_model import TaskList
+from src.domain.models.generated_task_model import GeneratedTask
+from src.domain.models.response_generator_model import TaskList
+from src.domain.ports.output.llm_task_generation_port import TaskGenerationPort
 
 
-class ClickUpTaskGenerator:
+class ClickUpTaskGenerator(TaskGenerationPort):
     """
     Génère des tâches ClickUp à partir d'un résumé de réunion
     en utilisant Azure OpenAI.
@@ -280,7 +281,7 @@ Return JSON only.
 
         self.deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 
-    def create_tasks(
+    def generate_tasks(
         self,
         meeting_summary: str,
         folders_statuses: Dict[str, Dict[str, List[str]]]

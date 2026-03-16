@@ -1,17 +1,18 @@
 import os
 
 import requests
-from typing import Dict, List
+from typing import List
 
 from dotenv import load_dotenv
 
-from src.clickup_list_model import ClickUpList
-from src.folder_model import Folder
-from src.task_model import Task
+from src.domain.models.clickup_list_model import ClickUpList
+from src.domain.models.folder_model import Folder
+from src.domain.models.task_model import Task
+from src.domain.ports.output.clickup_manager_port import ClickUpMangerPort
 
 PRIORITIES = ["urgent", "high", "normal", "low"]
 
-class ClickUpConnector:
+class ClickUpManager(ClickUpMangerPort):
 
     BASE_URL = "https://api.clickup.com/api/v2"
 
@@ -147,43 +148,3 @@ class ClickUpConnector:
                 break
 
         return members
-
-    @staticmethod
-    def get_folders_statuses_and_priorities(folders) -> Dict[str, Dict[str, List[str]]]:
-        """
-        Retourne les statuts et priorités disponibles pour chaque folder
-        même si aucune task n'existe.
-
-        Format renvoyé :
-        {
-            "folder_name": {
-                "statuses": ["to do", "in progress", "done"],
-                "priorities": ["low", "medium", "high"]
-            }
-        }
-        """
-
-        folders_info: Dict[str, Dict[str, set]] = {}
-
-        for folder in folders:
-
-            if folder.name not in folders_info:
-                folders_info[folder.name] = {"statuses": set(), "priorities": set()}
-
-            for lst in folder.lists:
-                # Ajouter les statuts définis dans la list
-                for status in lst.statuses:
-                    folders_info[folder.name]["statuses"].add(status)
-
-                # Ajouter les priorités définies dans la list
-                for priority in lst.priorities:
-                    folders_info[folder.name]["priorities"].add(priority)
-
-        # conversion set -> list
-        return {
-            folder: {
-                "statuses": list(info["statuses"]),
-                "priorities": list(info["priorities"])
-            }
-            for folder, info in folders_info.items()
-        }
