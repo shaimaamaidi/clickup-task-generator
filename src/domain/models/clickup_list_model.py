@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from src.task_model import Task
+from src.domain.models.task_model import Task
 
 
 @dataclass

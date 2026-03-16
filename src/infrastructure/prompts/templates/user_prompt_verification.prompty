@@ -1,0 +1,26 @@
+---
+name: ClickUpTaskVerification
+description: Verifies generated ClickUp tasks against existing ones and decides whether to create or update
+authors:
+  - Amaidi Chaima
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+tags:
+  - clickup
+  - task-verification
+  - deduplication
+  - project-management
+  - update
+  - create
+version: 1.0.0
+---
+user:
+Existing ClickUp tasks:
+{{existing_tasks}}
+
+Generated tasks:
+{{generated_tasks}}
+
+Apply the verification rules and return the result.

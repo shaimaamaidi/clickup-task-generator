@@ -1,29 +1,17 @@
-import os
-
-import requests
 from typing import List
-
-from dotenv import load_dotenv
 
 from src.domain.models.clickup_list_model import ClickUpList
 from src.domain.models.folder_model import Folder
 from src.domain.models.task_model import Task
-from src.domain.ports.output.clickup_manager_port import ClickUpMangerPort
+from src.domain.ports.output.clickup_reader_port import ClickUpReaderPort
+from src.infrastructure.adapters.clickup.clickup_http_client import ClickUpHttpClient
 
 PRIORITIES = ["urgent", "high", "normal", "low"]
 
-class ClickUpManager(ClickUpMangerPort):
+class ClickUpReader(ClickUpReaderPort):
 
-    BASE_URL = "https://api.clickup.com/api/v2"
-
-    def __init__(self):
-        load_dotenv()
-
-        api_token = os.getenv("CLICKUP_API_TOKEN")
-        self.headers = {
-            "Authorization": api_token,
-            "Content-Type": "application/json"
-        }
+    def __init__(self, http_client: ClickUpHttpClient):
+        self._http = http_client
         self.space_id = None
 
     def set_space_id(self, space_id: str):
@@ -95,31 +83,19 @@ class ClickUpManager(ClickUpMangerPort):
         return folders
 
     def _get_folders(self, space_id: str):
-        url = f"{self.BASE_URL}/space/{space_id}/folder"
-        response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()["folders"]
+        return self._http.get(f"/space/{space_id}/folder")
 
     def _get_lists(self, folder_id: str):
-        url = f"{self.BASE_URL}/folder/{folder_id}/list"
-        response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()["lists"]
+        return self._http.get(f"/folder/{folder_id}/list")
 
     def _get_tasks(self, list_id: str):
-        url = f"{self.BASE_URL}/list/{list_id}/task"
-        response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()["tasks"]
+        return self._http.get(f"/list/{list_id}/task")
 
     def _get_list_details(self, list_id: str):
         """
         Récupère les détails complets d'une list, incluant statuses et priorities.
         """
-        url = f"{self.BASE_URL}/list/{list_id}"
-        response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+        return self._http.get(f"/list/{list_id}")
 
     def get_workspace_members(self) -> List[dict]:
         """
@@ -130,11 +106,7 @@ class ClickUpManager(ClickUpMangerPort):
             ...
         ]
         """
-        url = f"{self.BASE_URL}/team"
-        response = requests.get(url, headers=self.headers)
-        response.raise_for_status()
-
-        teams = response.json().get("teams", [])
+        teams = self._http.get(f"/team").get("teams", [])
         members = []
 
         for team in teams:

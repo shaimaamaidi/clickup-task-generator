@@ -10,7 +10,7 @@ def resolve_assignee_ids(name_to_email: dict, email_to_id: Dict[str, int], assig
     for name in assignee_names:
         if not name or name == "غير محدد":
             continue
-        member_id = find_member_id(name, name_to_email, email_to_id)
+        member_id = _find_member_id(name, name_to_email, email_to_id)
         if member_id:
             resolved.append(member_id)
         else:
@@ -18,7 +18,7 @@ def resolve_assignee_ids(name_to_email: dict, email_to_id: Dict[str, int], assig
     return resolved
 
 
-def find_member_id(name: str, name_to_email: dict, email_to_id: Dict[str, int]) -> Optional[int]:
+def _find_member_id(name: str, name_to_email: dict, email_to_id: Dict[str, int]) -> Optional[int]:
     """
     1. Cherche l'email dans le dictionnaire Excel via le nom
     2. Utilise l'email pour trouver l'ID ClickUp

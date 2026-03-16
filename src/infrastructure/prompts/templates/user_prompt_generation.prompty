@@ -1,0 +1,28 @@
+---
+name: ClickUpTaskGeneration
+description: Extracts actionable software development tasks from a meeting summary and converts them into structured ClickUp tasks
+authors:
+  - Amaidi Chaima
+model:
+  api: chat
+  configuration:
+    type: azure_openai
+tags:
+  - clickup
+  - task-generation
+  - meeting
+  - extraction
+  - project-management
+  - arabic
+version: 1.0.0
+---
+user:
+Below is the meeting summary.
+
+{meeting_summary}
+
+Available folders and their statuses:
+
+{folders_text}
+
+Extract all actionable tasks from the meeting summary.

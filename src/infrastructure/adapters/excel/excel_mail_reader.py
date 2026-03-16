@@ -25,7 +25,7 @@ class ExcelMailReader(UserEmailRepositoryPort):
         if not self.file_path.exists():
             raise FileNotFoundError(f"Le fichier {excel_path} n'existe pas.")
 
-    def read_to_dict(self) -> dict:
+    def get_username_to_email(self) -> dict:
         """
         Lit le fichier Excel et retourne un dictionnaire {USERNAME: MAIL}.
 
