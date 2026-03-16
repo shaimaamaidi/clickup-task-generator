@@ -3,6 +3,7 @@ from typing import List
 from src.domain.models.folder_model import Folder
 from src.domain.models.generated_task_model import GeneratedTask
 from src.domain.models.verification_result_model import VerificationResult
+from src.domain.ports.input.meeting_processing_port import MeetingProcessingPort
 from src.domain.ports.output.clickup_reader_port import ClickUpReaderPort
 from src.domain.ports.output.clickup_task_writer_port import ClickUpTaskWriterPort
 from src.domain.ports.output.llm_task_generation_port import TaskGenerationPort
@@ -12,7 +13,7 @@ from src.application.services.task_grouping_service import get_folders_statuses_
     get_tasks_by_folder
 
 
-class ClickUpTaskPipelineUseCase:
+class ClickUpTaskPipelineUseCase(MeetingProcessingPort):
     """
     Orchestrateur principal du pipeline.
     Ne connaît que des ports (interfaces abstraites) — jamais les adapters concrets.
@@ -32,7 +33,7 @@ class ClickUpTaskPipelineUseCase:
         self._task_writer = task_writer
         self._email_repository = email_repository
 
-    def execute(self, space_id: str, meeting_summary: str) -> List[VerificationResult]:
+    def process_meeting(self, space_id: str, meeting_summary: str) -> List[VerificationResult]:
         # 1. Récupérer la structure de l'espace ClickUp
         self._clickup_repository.set_space_id(space_id)
         folders: List[Folder] = self._clickup_repository.get_space_structure(space_id)
