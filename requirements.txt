@@ -1,0 +1,6 @@
+openpyxl
+requests
+pandas
+urllib3
+openai
+python-dotenv
