@@ -1,3 +1,5 @@
+"""Meeting processing endpoints."""
+
 import logging
 
 from fastapi import APIRouter, Request
@@ -18,6 +20,18 @@ router = APIRouter(prefix="/meeting", tags=["meeting"])
     summary="Process a meeting summary and sync ClickUp tasks",
 )
 def process_meeting(body: ProcessMeetingRequest, request: Request):
+    """Process a meeting summary and synchronize tasks in ClickUp.
+
+    Args:
+        body: Request payload with space ID and meeting summary.
+        request: FastAPI request object with application state.
+
+    Returns:
+        ProcessMeetingResponse with action counts and details.
+
+    Raises:
+        Exception: Propagated domain errors from the use case.
+    """
     logger.info(
         "POST /meeting/process — space_id='%s'.",
         body.space_id,

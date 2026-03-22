@@ -1,3 +1,5 @@
+"""LLM adapter for verifying generated ClickUp tasks."""
+
 import json
 import logging
 from typing import List
@@ -18,8 +20,15 @@ logger = logging.getLogger(__name__)
 
 
 class ClickUpTaskVerifier(TaskVerificationPort):
+    """Adapter that verifies generated tasks against existing tasks."""
 
     def __init__(self, llm_client: AzureLLMClient, prompt_provider: PromptProviderPort):
+        """Initialize the verifier.
+
+        Args:
+            llm_client: Azure OpenAI client wrapper.
+            prompt_provider: Prompt provider for system/user prompts.
+        """
         self._llm = llm_client
         self._prompt_provider = prompt_provider
 
@@ -28,6 +37,18 @@ class ClickUpTaskVerifier(TaskVerificationPort):
         existing_tasks: List[Task],
         generated_tasks: List[GeneratedTask]
     ) -> List[VerificationResult]:
+        """Verify generated tasks against existing tasks.
+
+        Args:
+            existing_tasks: Tasks already present in ClickUp.
+            generated_tasks: Tasks produced by the LLM.
+
+        Returns:
+            Filtered verification results describing create/update actions.
+
+        Raises:
+            LLMResponseException: If the LLM response is invalid.
+        """
 
         if not generated_tasks:
             logger.warning("No generated tasks to verify — skipping verification.")
@@ -80,7 +101,7 @@ class ClickUpTaskVerifier(TaskVerificationPort):
                     status_changed = result.task_status != existing.status
                     priority_changed = result.task_priority != existing.priority
 
-                    # Gérer les assignees multiples séparés par virgule
+                    # Handle multiple assignees separated by commas
                     new_assignees = {
                         a.strip() for a in result.task_assigne.split(",")
                         if a.strip() and a.strip() != "غير محدد"

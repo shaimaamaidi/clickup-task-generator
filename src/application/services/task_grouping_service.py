@@ -1,11 +1,23 @@
+"""Application services for grouping tasks and folder metadata."""
+
 import logging
 from typing import List, Dict
 from src.domain.models.task_model import Task
 from src.domain.models.generated_task_model import GeneratedTask
 
+
 logger = logging.getLogger(__name__)
 
+
 def get_tasks_by_folder(folders) -> Dict[str, List[Task]]:
+    """Group existing tasks by folder name.
+
+    Args:
+        folders: Iterable of Folder objects containing lists and tasks.
+
+    Returns:
+        Mapping of folder name to a list of Task instances.
+    """
     result: Dict[str, List[Task]] = {}
 
     for folder in folders:
@@ -23,6 +35,14 @@ def get_tasks_by_folder(folders) -> Dict[str, List[Task]]:
 
 
 def get_generated_tasks_by_folder(generated_tasks: List[GeneratedTask]) -> Dict[str, List[GeneratedTask]]:
+    """Group generated tasks by folder name.
+
+    Args:
+        generated_tasks: List of GeneratedTask instances.
+
+    Returns:
+        Mapping of folder name to a list of GeneratedTask instances.
+    """
     result: Dict[str, List[GeneratedTask]] = {}
 
     for task in generated_tasks:
@@ -39,6 +59,14 @@ def get_generated_tasks_by_folder(generated_tasks: List[GeneratedTask]) -> Dict[
     return result
 
 def print_tasks_by_folder(tasks_by_folder: Dict[str, List[Task]]) -> None:
+    """Print grouped tasks to stdout.
+
+    Args:
+        tasks_by_folder: Mapping of folder name to existing tasks.
+
+    Returns:
+        None.
+    """
     for folder_name, tasks in tasks_by_folder.items():
         print(f"Folder: {folder_name}")
         if tasks:
@@ -50,6 +78,14 @@ def print_tasks_by_folder(tasks_by_folder: Dict[str, List[Task]]) -> None:
 
 
 def print_generated_tasks_by_folder(generated_by_folder: Dict[str, List[GeneratedTask]]) -> None:
+    """Print grouped generated tasks to stdout.
+
+    Args:
+        generated_by_folder: Mapping of folder name to generated tasks.
+
+    Returns:
+        None.
+    """
     for folder_name, tasks in generated_by_folder.items():
         print(f"Folder: {folder_name}")
         if tasks:
@@ -63,17 +99,20 @@ def print_generated_tasks_by_folder(generated_by_folder: Dict[str, List[Generate
 
 
 def get_folders_statuses_and_priorities(folders) -> Dict[str, Dict[str, List[str]]]:
-    """
-    Retourne les statuts et priorités disponibles pour chaque folder
-    même si aucune task n'existe.
+    """Collect statuses and priorities available per folder.
 
-    Format renvoyé :
-    {
-        "folder_name": {
-            "statuses": ["to do", "in progress", "done"],
-            "priorities": ["low", "medium", "high"]
-        }
-    }
+    Args:
+        folders: Iterable of Folder objects containing lists and metadata.
+
+    Returns:
+        Mapping of folder name to available statuses and priorities.
+        Example:
+            {
+                "folder_name": {
+                    "statuses": ["to do", "in progress", "done"],
+                    "priorities": ["low", "medium", "high"],
+                }
+            }
     """
 
     folders_info: Dict[str, Dict[str, set]] = {}
@@ -84,11 +123,11 @@ def get_folders_statuses_and_priorities(folders) -> Dict[str, Dict[str, List[str
             folders_info[folder.name] = {"statuses": set(), "priorities": set()}
 
         for lst in folder.lists:
-            # Ajouter les statuts définis dans la list
+            # Add statuses defined on the list
             for status in lst.statuses:
                 folders_info[folder.name]["statuses"].add(status)
 
-            # Ajouter les priorités définies dans la list
+            # Add priorities defined on the list
             for priority in lst.priorities:
                 folders_info[folder.name]["priorities"].add(priority)
 

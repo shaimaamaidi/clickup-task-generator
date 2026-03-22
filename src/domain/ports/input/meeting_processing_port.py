@@ -1,19 +1,24 @@
+"""Input port for meeting processing use cases."""
+
 from abc import ABC, abstractmethod
 
 
 class MeetingProcessingPort(ABC):
     """
-    Port d'entrée principal de l'application.
-    Définit le contrat pour traiter un résumé de réunion
-    et synchroniser les tâches dans ClickUp.
+    Main input port of the application.
+    Defines the contract for processing a meeting summary
+    and syncing tasks in ClickUp.
     """
 
     @abstractmethod
     def process_meeting(self, space_id: str, meeting_summary: str) -> None:
-        """
-        Traite un résumé de réunion et synchronise les tâches dans ClickUp.
+        """Process a meeting summary and sync tasks in ClickUp.
 
-        :param space_id
-        :param meeting_summary: Résumé de la réunion en arabe ou en français.
+        Args:
+            space_id: ClickUp space identifier.
+            meeting_summary: Meeting summary in Arabic or French.
+
+        Returns:
+            None.
         """
         pass

@@ -2,10 +2,12 @@
 
 import logging
 
+
 def setup_logger():
     """Configure global logging settings for the application.
 
-    :return: None.
+    Returns:
+        None.
     """
     logging.basicConfig(
         level=logging.INFO,

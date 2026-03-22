@@ -1,3 +1,5 @@
+"""ClickUp reader adapter for folders, lists, and tasks."""
+
 import logging
 from typing import List
 
@@ -16,19 +18,37 @@ logger = logging.getLogger(__name__)
 PRIORITIES = ["urgent", "high", "normal", "low"]
 
 class ClickUpReader(ClickUpReaderPort):
+    """Adapter to fetch ClickUp space structure and members."""
 
     def __init__(self, http_client: ClickUpHttpClient):
+        """Initialize the reader with an HTTP client.
+
+        Args:
+            http_client: ClickUp HTTP client instance.
+        """
         self._http = http_client
         self.space_id = None
 
     def set_space_id(self, space_id: str):
+        """Set the current space identifier.
+
+        Args:
+            space_id: ClickUp space identifier.
+        """
         self.space_id = space_id
         logger.info("Space ID set to '%s'.", space_id)
 
     def get_space_structure(self, space_id: str) -> List[Folder]:
-        """
-        Récupère la structure complète d'un space :
-        folders → lists → tasks, et inclut statuses et priorities.
+        """Fetch the full structure of a space.
+
+        Args:
+            space_id: ClickUp space identifier.
+
+        Returns:
+            List of Folder objects containing lists, tasks, statuses, and priorities.
+
+        Raises:
+            ClickUpEmptySpaceException: If the space has no folders.
         """
         logger.info("Fetching space structure for space_id='%s'...", space_id)
         folders_data = self._get_folders(space_id)
@@ -44,10 +64,10 @@ class ClickUpReader(ClickUpReaderPort):
             lists: List[ClickUpList] = []
 
             for list_data in lists_data:
-                # Récupérer les détails de la list pour statuts et priorités
+                # Fetch list details for statuses and priorities
                 list_details = self._get_list_details(list_data["id"])
 
-                # Récupérer les tasks
+                # Fetch tasks
                 tasks_data = self._get_tasks(list_data["id"])
                 tasks: List[Task] = []
 
@@ -63,10 +83,10 @@ class ClickUpReader(ClickUpReaderPort):
                         )
                     )
 
-                # Récupérer les statuses de la list
+                # Fetch list statuses
                 statuses = [s["status"] for s in list_details.get("statuses", []) if "status" in s]
 
-                # Récupérer les priorities de la list
+                # Fetch list priorities
                 priorities = [
                     p.get("priority") or p.get("name")
                     for p in list_details.get("priorities", [])
@@ -105,13 +125,13 @@ class ClickUpReader(ClickUpReaderPort):
         return folders
 
     def get_workspace_members(self) -> List[dict]:
-        """
-        Retourne la liste des membres du workspace.
-        Format retourné :
-        [
-            {"id": 123, "username": "xxxx", "email": "xxxx@example.com"},
-            ...
-        ]
+        """Return the list of workspace members.
+
+        Returns:
+            List of member dictionaries with id, username, and email.
+
+        Raises:
+            ClickUpWorkspaceMembersException: If the workspace has no members.
         """
         logger.info("Fetching workspace members for space_id='%s'...", self.space_id)
         teams = self._http.get(f"/team").get("teams", [])
@@ -140,16 +160,45 @@ class ClickUpReader(ClickUpReaderPort):
         return members
 
     def _get_folders(self, space_id: str):
+        """Fetch folders for a space.
+
+        Args:
+            space_id: ClickUp space identifier.
+
+        Returns:
+            Parsed JSON response of folders.
+        """
         return self._http.get(f"/space/{space_id}/folder")
 
     def _get_lists(self, folder_id: str):
+        """Fetch lists for a folder.
+
+        Args:
+            folder_id: ClickUp folder identifier.
+
+        Returns:
+            Parsed JSON response of lists.
+        """
         return self._http.get(f"/folder/{folder_id}/list")
 
     def _get_tasks(self, list_id: str):
+        """Fetch tasks for a list.
+
+        Args:
+            list_id: ClickUp list identifier.
+
+        Returns:
+            Parsed JSON response of tasks.
+        """
         return self._http.get(f"/list/{list_id}/task")
 
     def _get_list_details(self, list_id: str):
-        """
-        Récupère les détails complets d'une list, incluant statuses et priorities.
+        """Fetch full list details, including statuses and priorities.
+
+        Args:
+            list_id: ClickUp list identifier.
+
+        Returns:
+            Parsed JSON response of list details.
         """
         return self._http.get(f"/list/{list_id}")

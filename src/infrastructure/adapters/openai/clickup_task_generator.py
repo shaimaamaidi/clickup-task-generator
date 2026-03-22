@@ -1,3 +1,5 @@
+"""LLM adapter for generating ClickUp tasks."""
+
 import json
 import logging
 from typing import List, Dict
@@ -17,11 +19,17 @@ logger = logging.getLogger(__name__)
 
 class ClickUpTaskGenerator(TaskGenerationPort):
     """
-    Génère des tâches ClickUp à partir d'un résumé de réunion
-    en utilisant Azure OpenAI.
+    Generate ClickUp tasks from a meeting summary
+    using Azure OpenAI.
     """
 
     def __init__(self, llm_client: AzureLLMClient, prompt_provider: PromptProviderPort):
+        """Initialize the generator.
+
+        Args:
+            llm_client: Azure OpenAI client wrapper.
+            prompt_provider: Prompt provider for system/user prompts.
+        """
         self._llm = llm_client
         self._prompt_provider = prompt_provider
 
@@ -30,22 +38,21 @@ class ClickUpTaskGenerator(TaskGenerationPort):
         meeting_summary: str,
         folders_statuses: Dict[str, Dict[str, List[str]]]
     ) -> List[GeneratedTask]:
-        """
-        Génère des tasks à partir d'un résumé de réunion.
+        """Generate tasks from a meeting summary.
 
         Args:
-            meeting_summary: résumé de réunion en arabe
-            folders_statuses: {
-                "bug": {"statuses": ["todo","in progress","done"], "priorities": ["low","medium","high"]},
-                "development": {"statuses": ["todo","in progress","done"], "priorities": ["low","medium","high"]}
-            }
+            meeting_summary: Meeting summary in Arabic or French.
+            folders_statuses: Mapping of folder names to statuses and priorities.
 
         Returns:
-            Liste de GeneratedTask
+            List of GeneratedTask instances.
+
+        Raises:
+            LLMResponseException: If the LLM response is malformed.
         """
         logger.info("Starting task generation from meeting summary...")
 
-        # On convertit le dictionnaire en texte JSON pour fournir au LLM
+        # Convert the dictionary to JSON text to provide to the LLM
         folders_text = json.dumps(folders_statuses, ensure_ascii=False, indent=2)
 
 

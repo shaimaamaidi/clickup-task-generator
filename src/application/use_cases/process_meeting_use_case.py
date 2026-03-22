@@ -1,3 +1,5 @@
+"""Use case for processing meeting summaries into ClickUp actions."""
+
 import logging
 from typing import List
 
@@ -19,8 +21,15 @@ logger = logging.getLogger(__name__)
 
 class ProcessMeetingUseCase(MeetingProcessingPort):
     """
-    Orchestrateur principal du pipeline.
-    Ne connaît que des ports (interfaces abstraites) — jamais les adapters concrets.
+    Main pipeline orchestrator.
+    It only depends on ports (abstract interfaces), never concrete adapters.
+
+    Attributes:
+        _clickup_reader: Port to read ClickUp structure and members.
+        _task_generator: Port to generate tasks from meeting summaries.
+        _task_verifier: Port to verify generated tasks against existing tasks.
+        _clickup_writer: Port to apply create/update actions in ClickUp.
+        _email_repository: Port to resolve usernames to emails.
     """
 
     def __init__(
@@ -38,9 +47,21 @@ class ProcessMeetingUseCase(MeetingProcessingPort):
         self._email_repository = email_repository
 
     def process_meeting(self, space_id: str, meeting_summary: str) -> List[VerificationResult]:
+        """Process a meeting summary and synchronize tasks in ClickUp.
+
+        Args:
+            space_id: ClickUp space identifier.
+            meeting_summary: Meeting summary in Arabic or French.
+
+        Returns:
+            List of verification results describing create/update actions.
+
+        Raises:
+            AppException: Propagated when adapters raise domain exceptions.
+        """
         logger.info("Starting meeting processing for space_id='%s'", space_id)
 
-        # 1. Récupérer la structure de l'espace ClickUp
+        # 1. Fetch the ClickUp space structure
         self._clickup_reader.set_space_id(space_id)
         folders: List[Folder] = self._clickup_reader.get_space_structure(space_id)
         logger.info(
@@ -49,10 +70,10 @@ class ProcessMeetingUseCase(MeetingProcessingPort):
             space_id,
         )
 
-        # 2. Extraire les statuses/priorités par folder (logique applicative, pas domaine)
+        # 2. Extract statuses/priorities per folder (application logic, not domain)
         folders_statuses = get_folders_statuses_and_priorities(folders)
 
-        # 3. Générer les tasks depuis le résumé de réunion
+        # 3. Generate tasks from the meeting summary
         logger.info("Generating tasks from meeting summary...")
         generated_tasks: List[GeneratedTask] = self._task_generator.generate_tasks(
             meeting_summary=meeting_summary,
@@ -64,11 +85,11 @@ class ProcessMeetingUseCase(MeetingProcessingPort):
             logger.warning("No tasks extracted from meeting summary — pipeline stopped early.")
             return []
 
-        # 4. Grouper les tasks existantes et générées par folder
+        # 4. Group existing and generated tasks by folder
         existing_by_folder = get_tasks_by_folder(folders)
         generated_by_folder = get_generated_tasks_by_folder(generated_tasks)
 
-        # 5. Vérifier folder par folder (doublon ? créer ? mettre à jour ?)
+        # 5. Verify folder by folder (duplicate? create? update?)
         logger.info("Starting task verification across %d folder(s)...", len(generated_by_folder))
         all_results = []
         for folder_name, gen_tasks in generated_by_folder.items():
@@ -94,12 +115,12 @@ class ProcessMeetingUseCase(MeetingProcessingPort):
             logger.warning("No create/update actions to apply after verification.")
             return []
 
-        # 6. Récupérer membres et emails
+        # 6. Fetch members and emails
         name_to_email = self._email_repository.get_username_to_email()
         members = self._clickup_reader.get_workspace_members()
         logger.info("Workspace members retrieved: %d member(s).", len(members))
 
-        # 7. Appliquer les résultats dans ClickUp (create / update / skip)
+        # 7. Apply results in ClickUp (create / update / skip)
         logger.info("Applying results to ClickUp...")
         self._clickup_writer.apply_results(all_results, folders, members, name_to_email)
 

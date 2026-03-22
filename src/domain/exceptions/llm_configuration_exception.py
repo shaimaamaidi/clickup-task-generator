@@ -1,3 +1,5 @@
+"""Exception for missing or invalid LLM configuration."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

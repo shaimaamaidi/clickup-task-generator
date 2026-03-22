@@ -1,3 +1,5 @@
+"""FastAPI exception handlers for domain and validation errors."""
+
 import logging
 
 from fastapi import Request
@@ -6,7 +8,9 @@ from fastapi.responses import JSONResponse
 
 from src.domain.exceptions.app_exception import AppException
 
+
 logger = logging.getLogger(__name__)
+
 
 _CONFIG_CODES = {
     "CLICKUP_AUTH_ERROR",
@@ -35,11 +39,14 @@ class FastAPIExceptionHandler:
 
     @staticmethod
     async def handle_app_exception(request: Request, exc: AppException) -> JSONResponse:
-        """Handle :class:`AppException` errors.
+        """Handle domain application exceptions.
 
-        :param request: Incoming FastAPI request.
-        :param exc: Application exception instance.
-        :return: JSON error response.
+        Args:
+            request: Incoming FastAPI request.
+            exc: Application exception instance.
+
+        Returns:
+            JSON error response.
         """
         if exc.code in _CONFIG_CODES:
             logger.error(
@@ -76,9 +83,12 @@ class FastAPIExceptionHandler:
     async def handle_validation_exception(request: Request, exc: RequestValidationError) -> JSONResponse:
         """Handle FastAPI request validation errors.
 
-        :param request: Incoming FastAPI request.
-        :param exc: Validation exception instance.
-        :return: JSON error response.
+        Args:
+            request: Incoming FastAPI request.
+            exc: Validation exception instance.
+
+        Returns:
+            JSON error response.
         """
         logger.info(
             "Validation Error on request %s: %s",
@@ -101,9 +111,12 @@ class FastAPIExceptionHandler:
     async def handle_generic_exception(request: Request, exc: Exception) -> JSONResponse:
         """Handle unhandled exceptions.
 
-        :param request: Incoming FastAPI request.
-        :param exc: Unhandled exception instance.
-        :return: JSON error response.
+        Args:
+            request: Incoming FastAPI request.
+            exc: Unhandled exception instance.
+
+        Returns:
+            JSON error response.
         """
         logger.error(
             "Unhandled exception on request %s: %s",

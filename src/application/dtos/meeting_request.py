@@ -1,8 +1,15 @@
+"""Request DTOs for the meeting processing API."""
+
 from pydantic import BaseModel, Field
 
 
 class ProcessMeetingRequest(BaseModel):
-    """Request DTO for POST /meeting/process."""
+    """Request payload for POST /meeting/process.
+
+    Attributes:
+        space_id: ClickUp space ID to sync tasks into.
+        meeting_summary: Meeting summary in Arabic or French.
+    """
 
     space_id: str = Field(
         ...,

@@ -1,3 +1,5 @@
+"""Exception for Excel read failures."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

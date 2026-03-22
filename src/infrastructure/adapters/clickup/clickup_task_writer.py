@@ -1,3 +1,5 @@
+"""ClickUp task writer adapter for applying create/update actions."""
+
 import logging
 from typing import List
 
@@ -14,12 +16,28 @@ logger = logging.getLogger(__name__)
 
 
 class ClickUpTaskWriter(ClickUpTaskWriterPort):
-
+    """Adapter that applies task changes to ClickUp."""
 
     def __init__(self, http_client: ClickUpHttpClient):
+        """Initialize the writer with an HTTP client.
+
+        Args:
+            http_client: ClickUp HTTP client instance.
+        """
         self._http = http_client
 
     def apply_results(self, results: List[VerificationResult], folders: List[Folder], members: List[dict], name_to_email: dict[str, str]) -> None:
+        """Apply verification results to ClickUp.
+
+        Args:
+            results: Verification results to apply.
+            folders: Folder structure for resolving list IDs.
+            members: Workspace members for assignee resolution.
+            name_to_email: Mapping of usernames to emails.
+
+        Returns:
+            None.
+        """
         name_to_email = name_to_email
         email_to_id = {m["email"].lower(): m["id"] for m in members}
 
@@ -52,6 +70,17 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
                 self._update_task(result, name_to_email, email_to_id)
 
     def _create_task(self, list_id: str, result: VerificationResult, name_to_email: dict[str, str], email_to_id: dict[str, int]) -> None:
+        """Create a task in ClickUp.
+
+        Args:
+            list_id: ClickUp list identifier.
+            result: Verification result describing the task.
+            name_to_email: Mapping of usernames to emails.
+            email_to_id: Mapping of email to ClickUp member ID.
+
+        Raises:
+            ClickUpTaskCreateException: If the API request fails.
+        """
         endpoint = f"/list/{list_id}/task"
 
         payload = {
@@ -81,6 +110,16 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
             )
 
     def _update_task(self, result: VerificationResult, name_to_email: dict[str, str], email_to_id: dict[str, int]) -> None:
+        """Update an existing task in ClickUp.
+
+        Args:
+            result: Verification result describing updates.
+            name_to_email: Mapping of usernames to emails.
+            email_to_id: Mapping of email to ClickUp member ID.
+
+        Raises:
+            ClickUpTaskUpdateException: If the API request fails.
+        """
         endpoint = f"/task/{result.task_id}"
 
         payload = {
@@ -109,6 +148,14 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
 
     @staticmethod
     def _build_folder_list_map(folders) -> dict:
+        """Build a mapping of folder name to list ID.
+
+        Args:
+            folders: Folder objects with lists.
+
+        Returns:
+            Mapping of folder name to first list ID.
+        """
         mapping = {}
         for folder in folders:
             if folder.lists:

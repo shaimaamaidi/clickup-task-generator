@@ -1,3 +1,5 @@
+"""Exception for failures when creating ClickUp tasks."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

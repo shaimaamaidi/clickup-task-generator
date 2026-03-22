@@ -1,3 +1,5 @@
+"""Exception raised when the Excel file is missing."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

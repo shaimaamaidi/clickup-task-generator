@@ -1,3 +1,5 @@
+"""Domain helpers for resolving ClickUp assignees and priorities."""
+
 import logging
 from difflib import SequenceMatcher
 from typing import List, Dict, Optional
@@ -7,9 +9,15 @@ logger = logging.getLogger(__name__)
 
 
 def resolve_assignee_ids(name_to_email: dict, email_to_id: Dict[str, int], assignee_names: List[str]) -> List[int]:
-    """
-    Prend une liste de noms (arabes ou autres) et retourne
-    la liste des user IDs correspondants via matching par email/username.
+    """Resolve assignee names to ClickUp member IDs.
+
+    Args:
+        name_to_email: Mapping of usernames to emails from Excel.
+        email_to_id: Mapping of email to ClickUp member ID.
+        assignee_names: List of assignee display names.
+
+    Returns:
+        List of resolved ClickUp member IDs.
     """
     resolved = []
     for name in assignee_names:
@@ -30,11 +38,21 @@ def resolve_assignee_ids(name_to_email: dict, email_to_id: Dict[str, int], assig
 
 
 def _find_member_id(name: str, name_to_email: dict, email_to_id: Dict[str, int]) -> Optional[int]:
+    """Resolve a single name to a ClickUp member ID.
+
+    The resolution is performed by:
+    1. Looking up the email in the Excel dictionary by name.
+    2. Using the email to find the ClickUp ID.
+
+    Args:
+        name: Assignee display name.
+        name_to_email: Mapping of usernames to emails from Excel.
+        email_to_id: Mapping of email to ClickUp member ID.
+
+    Returns:
+        ClickUp member ID if found, otherwise None.
     """
-    1. Cherche l'email dans le dictionnaire Excel via le nom
-    2. Utilise l'email pour trouver l'ID ClickUp
-    """
-    # Étape 1 — trouver l'email via Excel (matching par similarité sur le nom)
+    # Step 1 — find the email via Excel (similarity match on the name)
     best_email = None
     best_score = 0.0
 
@@ -59,7 +77,7 @@ def _find_member_id(name: str, name_to_email: dict, email_to_id: Dict[str, int])
         best_score,
     )
 
-    # Étape 2 — trouver l'ID ClickUp via l'email
+    # Step 2 — find the ClickUp ID via the email
     member_id = email_to_id.get(best_email.lower())
     if not member_id:
         logger.warning(
@@ -73,6 +91,14 @@ def _find_member_id(name: str, name_to_email: dict, email_to_id: Dict[str, int])
     return member_id
 
 def priority_to_int(priority: str) -> int:
+    """Convert a priority label to a numeric rank.
+
+    Args:
+        priority: Priority label (e.g., urgent, high, normal, low).
+
+    Returns:
+        Integer rank where lower means higher priority.
+    """
     mapping = {
         "urgent": 1,
         "high": 2,

@@ -1,3 +1,5 @@
+"""Exception for missing ClickUp workspace members."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

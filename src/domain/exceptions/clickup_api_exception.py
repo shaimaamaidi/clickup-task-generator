@@ -1,3 +1,5 @@
+"""Exception for generic ClickUp API errors."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

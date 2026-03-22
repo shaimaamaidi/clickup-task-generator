@@ -1,3 +1,5 @@
+"""Exception for ClickUp authentication failures."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

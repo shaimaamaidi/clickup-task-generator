@@ -1,3 +1,5 @@
+"""Azure OpenAI client wrapper for structured responses."""
+
 import logging
 import os
 from dotenv import load_dotenv
@@ -12,11 +14,16 @@ logger = logging.getLogger(__name__)
 
 class AzureLLMClient:
     """
-    Wrapper partagé pour Azure OpenAI.
-    Centralise la configuration et l'instanciation du client.
+    Shared wrapper for Azure OpenAI.
+    Centralizes client configuration and instantiation.
     """
 
     def __init__(self):
+        """Initialize the Azure OpenAI client from environment variables.
+
+        Raises:
+            LLMConfigurationException: If required variables are missing.
+        """
         load_dotenv()
 
         api_key = os.getenv("AZURE_OPENAI_API_KEY")
@@ -49,9 +56,18 @@ class AzureLLMClient:
         )
 
     def parse(self, messages: list, response_format, temperature: float = 0):
-        """
-        Appel structuré avec response_format Pydantic.
-        Retourne l'objet parsé directement.
+        """Call the LLM and parse the structured response.
+
+        Args:
+            messages: List of chat messages for the LLM.
+            response_format: Pydantic model or response schema.
+            temperature: Sampling temperature for the LLM.
+
+        Returns:
+            Parsed response object.
+
+        Raises:
+            LLMResponseException: If the response is invalid or unparseable.
         """
         logger.info(
             "Calling LLM deployment='%s' with %d message(s)...",

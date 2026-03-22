@@ -1,4 +1,5 @@
 """Prompt loader for .prompty templates."""
+
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -21,8 +22,11 @@ class PromptyLoader(PromptProviderPort):
     def __init__(self, templates_dir: Optional[str] = None):
         """Initialize the loader.
 
-        :param templates_dir: Optional path to templates directory.
-        :raises ValueError: If the templates directory does not exist.
+        Args:
+            templates_dir: Optional path to templates directory.
+
+        Raises:
+            PromptTemplateNotFoundException: If the templates directory does not exist.
         """
         if templates_dir is None:
             current_dir = Path(__file__).parent.parent
@@ -38,6 +42,17 @@ class PromptyLoader(PromptProviderPort):
 
     @staticmethod
     def _parse_prompty_file(file_path: Path) -> Dict[str, Any]:
+        """Parse a .prompty template file into metadata and content.
+
+        Args:
+            file_path: Path to the .prompty file.
+
+        Returns:
+            Dictionary with metadata and content keys.
+
+        Raises:
+            PromptInvalidFormatException: If the file format is invalid.
+        """
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
@@ -60,11 +75,17 @@ class PromptyLoader(PromptProviderPort):
     def _load_prompt(self, prompt_name: str, **kwargs: Any) -> str:
         """Load and render a prompt template.
 
-        :param prompt_name: Template name without extension.
-        :param kwargs: Template variables for rendering.
-        :return: Rendered prompt content.
-        :raises FileNotFoundError: If the template does not exist.
-        :raises ValueError: If required inputs are missing.
+        Args:
+            prompt_name: Template name without extension.
+            **kwargs: Template variables for rendering.
+
+        Returns:
+            Rendered prompt content.
+
+        Raises:
+            PromptTemplateNotFoundException: If the template does not exist.
+            PromptMissingInputsException: If required inputs are missing.
+            PromptInvalidFormatException: If the template file is malformed.
         """
         file_path = self.templates_dir / f"{prompt_name}.prompty"
 
@@ -111,7 +132,11 @@ class PromptyLoader(PromptProviderPort):
     def get_system_prompt(self, name: str) -> str:
         """Return a system prompt by type.
 
-        :return: System prompt content.
+        Args:
+            name: Prompt name or type identifier.
+
+        Returns:
+            System prompt content.
         """
         prompt_name = f"system_prompt_{name}"
         return self._load_prompt(prompt_name)
@@ -119,7 +144,12 @@ class PromptyLoader(PromptProviderPort):
     def get_user_prompt(self, name: str, **kwargs: Any) -> str:
         """Return a user prompt by type.
 
-        :return: User prompt content.
+        Args:
+            name: Prompt name or type identifier.
+            **kwargs: Template variables for rendering.
+
+        Returns:
+            User prompt content.
         """
         prompt_name = f"user_prompt_{name}"
         return self._load_prompt(prompt_name, **kwargs)

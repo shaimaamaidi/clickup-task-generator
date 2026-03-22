@@ -1,3 +1,5 @@
+"""Exception raised when a ClickUp space has no folders."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

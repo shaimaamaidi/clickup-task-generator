@@ -1,3 +1,5 @@
+"""FastAPI application factory and configuration."""
+
 import logging
 
 from fastapi import FastAPI
@@ -10,10 +12,17 @@ from src.infrastructure.handlers.exception_handler import FastAPIExceptionHandle
 from src.infrastructure.logging.logger_config import setup_logger
 from src.presnetation.api.routers import health, meeting
 
+
 setup_logger()
 logger = logging.getLogger(__name__)
 
+
 def create_app() -> FastAPI:
+    """Create and configure the FastAPI application.
+
+    Returns:
+        Configured FastAPI instance with routes and exception handlers.
+    """
     app = FastAPI(
         title="ClickUp Meeting Processor",
         description="Processes meeting summaries and synchronizes tasks in ClickUp.",
@@ -45,4 +54,4 @@ def create_app() -> FastAPI:
 
     return app
 
-app =  create_app()
+app = create_app()

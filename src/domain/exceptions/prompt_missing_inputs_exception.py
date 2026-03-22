@@ -1,3 +1,5 @@
+"""Exception for missing prompt template variables."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

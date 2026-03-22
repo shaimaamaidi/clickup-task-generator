@@ -1,3 +1,5 @@
+"""Exception raised when Excel columns are missing."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

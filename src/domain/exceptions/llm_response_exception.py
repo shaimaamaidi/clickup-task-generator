@@ -1,3 +1,5 @@
+"""Exception for invalid or failed LLM responses."""
+
 from src.domain.exceptions.app_exception import AppException
 
 

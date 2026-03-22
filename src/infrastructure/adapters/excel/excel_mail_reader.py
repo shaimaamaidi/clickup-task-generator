@@ -1,3 +1,5 @@
+"""Excel adapter for loading username-to-email mappings."""
+
 import logging
 import os
 
@@ -17,14 +19,15 @@ logger = logging.getLogger(__name__)
 
 class ExcelMailReader(UserEmailRepositoryPort):
     """
-    Classe pour lire un fichier Excel contenant des colonnes USERNAME et MAIL
-    et retourner un dictionnaire {username: mail}.
+    Class to read an Excel file containing USERNAME and MAIL columns
+    and return a {username: mail} dictionary.
     """
 
     def __init__(self):
-        """
-        Initialise le lecteur Excel.
+        """Initialize the Excel reader.
 
+        Raises:
+            ExcelFileNotFoundException: If the Excel path is missing or invalid.
         """
         load_dotenv()
         excel_path = os.getenv("EXCEL_MAIL_PATH")
@@ -44,10 +47,14 @@ class ExcelMailReader(UserEmailRepositoryPort):
         logger.info("ExcelMailReader initialized with file '%s'.", self.file_path)
 
     def get_username_to_email(self) -> dict:
-        """
-        Lit le fichier Excel et retourne un dictionnaire {USERNAME: MAIL}.
+        """Read the Excel file and return a {USERNAME: MAIL} dictionary.
 
-        :return: dict
+        Returns:
+            Mapping of USERNAME to MAIL values.
+
+        Raises:
+            ExcelReadException: If reading the file fails.
+            ExcelMissingColumnsException: If required columns are absent.
         """
         logger.info("Reading username-to-email mapping from '%s'...", self.file_path.name)
         try:
@@ -56,13 +63,13 @@ class ExcelMailReader(UserEmailRepositoryPort):
             raise ExcelReadException(
                 f"Unable to read Excel file '{self.file_path}': {e}"
             )
-        # Nettoyage des colonnes pour s'assurer qu'elles existent
+        # Normalize columns to ensure they exist
         if 'USERNAME' not in df.columns or 'MAIL' not in df.columns:
             raise ExcelMissingColumnsException(
                 f"File '{self.file_path.name}' must contain 'USERNAME' and 'MAIL' columns."
             )
 
-        # Conversion en dictionnaire
+        # Convert to dictionary
         result = dict(zip(df['USERNAME'], df['MAIL']))
 
         logger.info(

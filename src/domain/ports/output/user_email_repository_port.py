@@ -1,8 +1,16 @@
+"""Output port for retrieving username-to-email mappings."""
+
 from typing import Dict
+
 
 class UserEmailRepositoryPort:
     """
-    Port de sortie : le domaine demande la correspondance username -> email
+    Output port: the domain requests the username -> email mapping.
     """
     def get_username_to_email(self) -> Dict[str, str]:
+        """Return the username to email mapping.
+
+        Returns:
+            Mapping of usernames to email addresses.
+        """
         pass
