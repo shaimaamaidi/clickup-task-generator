@@ -27,5 +27,3 @@ dist/
 # Project data
 data_extra/
 
-# Project entrypoint
-main.py
