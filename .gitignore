@@ -24,6 +24,3 @@ build/
 dist/
 *.egg-info/
 
-# Project data
-data_extra/
-
