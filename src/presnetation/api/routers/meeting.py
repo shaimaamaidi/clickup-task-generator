@@ -1,28 +1,15 @@
 import logging
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, Field
-from typing import List
 
-from src.domain.models.verification_result_model import VerificationResult
+from src.application.dtos.meeting_request import ProcessMeetingRequest
+from src.application.dtos.meeting_response import ProcessMeetingResponse
 
 
 logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/meeting", tags=["meeting"])
-
-
-class ProcessMeetingRequest(BaseModel):
-    space_id: str = Field(..., description="ClickUp space ID to sync tasks into")
-    meeting_summary: str = Field(..., description="Meeting summary in Arabic or French")
-
-
-class ProcessMeetingResponse(BaseModel):
-    total: int
-    created: int
-    updated: int
-    results: List[VerificationResult]
 
 
 @router.post(
