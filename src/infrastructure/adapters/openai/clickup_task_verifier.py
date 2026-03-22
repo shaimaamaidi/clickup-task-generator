@@ -23,7 +23,7 @@ class ClickUpTaskVerifier(TaskVerificationPort):
         self._llm = llm_client
         self._prompt_provider = prompt_provider
 
-    def verify(
+    def verify_tasks(
         self,
         existing_tasks: List[Task],
         generated_tasks: List[GeneratedTask]
