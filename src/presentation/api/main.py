@@ -10,7 +10,7 @@ from src.domain.exceptions.app_exception import AppException
 from src.infrastructure.di.container import Container
 from src.infrastructure.handlers.exception_handler import FastAPIExceptionHandler
 from src.infrastructure.logging.logger_config import setup_logger
-from src.presnetation.api.routers import health, meeting
+from src.presentation.api.routers import health, meeting
 
 
 setup_logger()

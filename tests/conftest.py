@@ -10,7 +10,7 @@ from src.domain.models.clickup_list_model import ClickUpList
 from src.domain.models.folder_model import Folder
 from src.domain.models.task_model import Task
 from src.domain.models.verification_result_model import VerificationResult
-from src.presnetation.api.routers import health, meeting
+from src.presentation.api.routers import health, meeting
 
 
 @dataclass
