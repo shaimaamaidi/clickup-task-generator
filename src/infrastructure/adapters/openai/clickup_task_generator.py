@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List, Dict
 
 from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
@@ -9,6 +10,9 @@ from src.domain.models.response_generator_model import TaskList
 from src.domain.ports.output.llm_task_generation_port import TaskGenerationPort
 from src.domain.ports.output.prompt_provider_port import PromptProviderPort
 from src.infrastructure.adapters.openai.AzureLLMClient import AzureLLMClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClickUpTaskGenerator(TaskGenerationPort):
@@ -39,6 +43,7 @@ class ClickUpTaskGenerator(TaskGenerationPort):
         Returns:
             Liste de GeneratedTask
         """
+        logger.info("Starting task generation from meeting summary...")
 
         # On convertit le dictionnaire en texte JSON pour fournir au LLM
         folders_text = json.dumps(folders_statuses, ensure_ascii=False, indent=2)
@@ -50,9 +55,15 @@ class ClickUpTaskGenerator(TaskGenerationPort):
         ]
         result = self._llm.parse(messages, response_format=TaskList)
 
-        if not result.tasks:
+        if result.tasks is None:
             raise LLMResponseException(
-                "The model did not extract any tasks from the meeting summary."
+                "The model returned a malformed response — 'tasks' field is null."
             )
+
+        if not result.tasks:
+            logger.warning("No tasks extracted from meeting summary.")
+            return []
+
+        logger.info("%d task(s) generated from meeting summary.", len(result.tasks))
 
         return result.task

@@ -1,3 +1,5 @@
+import logging
+
 from src.infrastructure.adapters.clickup.clickup_http_client import ClickUpHttpClient
 from src.infrastructure.adapters.clickup.clickup_reader import ClickUpReader
 from src.infrastructure.adapters.clickup.clickup_task_writer import ClickUpTaskWriter
@@ -8,6 +10,10 @@ from src.infrastructure.adapters.openai.clickup_task_verifier import ClickUpTask
 from src.infrastructure.prompts.loader.prompt_loader import PromptyLoader
 from src.application.use_cases.process_meeting_use_case import ProcessMeetingUseCase
 
+
+logger = logging.getLogger(__name__)
+
+
 class Container:
     """
     Conteneur d'injection de dépendances amélioré.
@@ -15,6 +21,8 @@ class Container:
     """
 
     def __init__(self):
+        logger.info("Initializing application container...")
+
         # --- Clients externes ---
         self._http_client = self._create_http_client()
         self._llm_client = self._create_llm_client()
@@ -32,38 +40,49 @@ class Container:
         # --- Use case ---
         self._process_meeting_use_case = self._create_process_meeting_use_case()
 
+        logger.info("Application container initialized successfully.")
+
     # ---------------------- Création des clients ----------------------
     @staticmethod
     def _create_http_client() -> ClickUpHttpClient:
+        logger.info("Creating ClickUpHttpClient...")
         return ClickUpHttpClient()
 
     @staticmethod
     def _create_llm_client() -> AzureLLMClient:
+        logger.info("Creating AzureLLMClient...")
         return AzureLLMClient()
 
     @staticmethod
     def _create_email_repository() -> ExcelMailReader:
+        logger.info("Creating ExcelMailReader...")
         return ExcelMailReader()
 
     @staticmethod
     def _create_prompt_provider() -> PromptyLoader:
+        logger.info("Creating PromptyLoader...")
         return PromptyLoader()
 
     # ---------------------- Création des adaptateurs ----------------------
     def _create_clickup_reader(self) -> ClickUpReader:
+        logger.info("Creating ClickUpReader...")
         return ClickUpReader(self._http_client)
 
     def _create_clickup_writer(self) -> ClickUpTaskWriter:
+        logger.info("Creating ClickUpTaskWriter...")
         return ClickUpTaskWriter(self._http_client)
 
     def _create_task_generator(self) -> ClickUpTaskGenerator:
+        logger.info("Creating ClickUpTaskGenerator...")
         return ClickUpTaskGenerator(self._llm_client, self._prompt_provider)
 
     def _create_task_verifier(self) -> ClickUpTaskVerifier:
+        logger.info("Creating ClickUpTaskVerifier...")
         return ClickUpTaskVerifier(self._llm_client, self._prompt_provider)
 
     # ---------------------- Création du use case ----------------------
     def _create_process_meeting_use_case(self) -> ProcessMeetingUseCase:
+        logger.info("Creating ProcessMeetingUseCase...")
         return ProcessMeetingUseCase(
             clickup_reader=self._clickup_reader,
             task_generator=self._task_generator,

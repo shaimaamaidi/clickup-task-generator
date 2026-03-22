@@ -1,5 +1,10 @@
+import logging
 from difflib import SequenceMatcher
 from typing import List, Dict, Optional
+
+
+logger = logging.getLogger(__name__)
+
 
 def resolve_assignee_ids(name_to_email: dict, email_to_id: Dict[str, int], assignee_names: List[str]) -> List[int]:
     """
@@ -14,7 +19,13 @@ def resolve_assignee_ids(name_to_email: dict, email_to_id: Dict[str, int], assig
         if member_id:
             resolved.append(member_id)
         else:
-            print(f"[WARN] Member '{name}' not found in workspace.")
+            logger.warning("Member '%s' not found in workspace.", name)
+
+    logger.info(
+        "Assignee resolution: %d/%d resolved.",
+        len(resolved),
+        len([n for n in assignee_names if n and n != "غير محدد"]),
+    )
     return resolved
 
 
@@ -34,18 +45,31 @@ def _find_member_id(name: str, name_to_email: dict, email_to_id: Dict[str, int])
             best_email = email
 
     if best_score < 0.5 or not best_email:
-        print(f"[WARN] No Excel match for '{name}' (best score: {best_score:.2f})")
+        logger.warning(
+            "No Excel match for '%s' (best score: %.2f).",
+            name,
+            best_score,
+        )
         return None
 
-    print(f"[EXCEL] '{name}' → email: {best_email} (score: {best_score:.2f})")
+    logger.info(
+        "Excel match: '%s' → email='%s' (score: %.2f).",
+        name,
+        best_email,
+        best_score,
+    )
 
     # Étape 2 — trouver l'ID ClickUp via l'email
     member_id = email_to_id.get(best_email.lower())
     if not member_id:
-        print(f"[WARN] Email '{best_email}' not found in ClickUp workspace.")
+        logger.warning(
+            "Email '%s' matched for '%s' but not found in ClickUp workspace.",
+            best_email,
+            name,
+        )
         return None
 
-    print(f"[RESOLVE] '{name}' → ID {member_id}")
+    logger.info("Resolved: '%s' → ClickUp ID %s.", name, member_id)
     return member_id
 
 def priority_to_int(priority: str) -> int:

@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from src.domain.exceptions.clickup_empty_space_exception import ClickUpEmptySpaceException
@@ -7,6 +8,10 @@ from src.domain.models.folder_model import Folder
 from src.domain.models.task_model import Task
 from src.domain.ports.output.clickup_reader_port import ClickUpReaderPort
 from src.infrastructure.adapters.clickup.clickup_http_client import ClickUpHttpClient
+
+
+logger = logging.getLogger(__name__)
+
 
 PRIORITIES = ["urgent", "high", "normal", "low"]
 
@@ -18,13 +23,14 @@ class ClickUpReader(ClickUpReaderPort):
 
     def set_space_id(self, space_id: str):
         self.space_id = space_id
+        logger.info("Space ID set to '%s'.", space_id)
 
     def get_space_structure(self, space_id: str) -> List[Folder]:
         """
         Récupère la structure complète d'un space :
         folders → lists → tasks, et inclut statuses et priorities.
         """
-
+        logger.info("Fetching space structure for space_id='%s'...", space_id)
         folders_data = self._get_folders(space_id)
         if not folders_data:
             raise ClickUpEmptySpaceException(
@@ -33,12 +39,11 @@ class ClickUpReader(ClickUpReaderPort):
         folders: List[Folder] = []
 
         for folder_data in folders_data:
-
+            logger.info("Processing folder '%s' (id=%s).", folder_data["name"], folder_data["id"])
             lists_data = self._get_lists(folder_data["id"])
             lists: List[ClickUpList] = []
 
             for list_data in lists_data:
-
                 # Récupérer les détails de la list pour statuts et priorités
                 list_details = self._get_list_details(list_data["id"])
 
@@ -68,6 +73,13 @@ class ClickUpReader(ClickUpReaderPort):
                     if p.get("priority") or p.get("name")
                 ]
 
+                logger.info(
+                    "List '%s': %d task(s), %d status(es).",
+                    list_data["name"],
+                    len(tasks),
+                    len(statuses),
+                )
+
                 lists.append(
                     ClickUpList(
                         id=list_data["id"],
@@ -85,23 +97,12 @@ class ClickUpReader(ClickUpReaderPort):
                     lists=lists
                 )
             )
-
+        logger.info(
+            "Space structure fetched: %d folder(s) for space_id='%s'.",
+            len(folders),
+            space_id,
+        )
         return folders
-
-    def _get_folders(self, space_id: str):
-        return self._http.get(f"/space/{space_id}/folder")
-
-    def _get_lists(self, folder_id: str):
-        return self._http.get(f"/folder/{folder_id}/list")
-
-    def _get_tasks(self, list_id: str):
-        return self._http.get(f"/list/{list_id}/task")
-
-    def _get_list_details(self, list_id: str):
-        """
-        Récupère les détails complets d'une list, incluant statuses et priorities.
-        """
-        return self._http.get(f"/list/{list_id}")
 
     def get_workspace_members(self) -> List[dict]:
         """
@@ -112,6 +113,7 @@ class ClickUpReader(ClickUpReaderPort):
             ...
         ]
         """
+        logger.info("Fetching workspace members for space_id='%s'...", self.space_id)
         teams = self._http.get(f"/team").get("teams", [])
         members = []
 
@@ -129,4 +131,25 @@ class ClickUpReader(ClickUpReaderPort):
             raise ClickUpWorkspaceMembersException(
                 f"Workspace '{self.space_id}' not found or has no members."
             )
+
+        logger.info(
+            "%d member(s) retrieved for workspace '%s'.",
+            len(members),
+            self.space_id,
+        )
         return members
+
+    def _get_folders(self, space_id: str):
+        return self._http.get(f"/space/{space_id}/folder")
+
+    def _get_lists(self, folder_id: str):
+        return self._http.get(f"/folder/{folder_id}/list")
+
+    def _get_tasks(self, list_id: str):
+        return self._http.get(f"/list/{list_id}/task")
+
+    def _get_list_details(self, list_id: str):
+        """
+        Récupère les détails complets d'une list, incluant statuses et priorities.
+        """
+        return self._http.get(f"/list/{list_id}")

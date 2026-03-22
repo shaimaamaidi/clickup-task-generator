@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from src.domain.exceptions.clickup_task_create_exception import ClickUpTaskCreateException
@@ -7,6 +8,9 @@ from src.domain.services.clickup_helper import priority_to_int, resolve_assignee
 from src.domain.models.verification_result_model import VerificationResult
 from src.domain.ports.output.clickup_task_writer_port import ClickUpTaskWriterPort
 from src.infrastructure.adapters.clickup.clickup_http_client import ClickUpHttpClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClickUpTaskWriter(ClickUpTaskWriterPort):
@@ -21,17 +25,29 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
 
         folder_list_map = self._build_folder_list_map(folders)
 
+        logger.info(
+            "Applying %d result(s) to ClickUp...",
+            len(results),
+        )
+
         for result in results:
             if result.action == "create":
                 list_id = folder_list_map.get(result.folder)
                 if not list_id:
-                    print(f"[SKIP] Folder '{result.folder}' not found in ClickUp.")
+                    logger.warning(
+                        "Folder '%s' not found in ClickUp — skipping task '%s'.",
+                        result.folder,
+                        result.task_name,
+                    )
                     continue
                 self._create_task(list_id, result, name_to_email, email_to_id)
 
             elif result.action == "update":
                 if not result.task_id:
-                    print(f"[SKIP] Update requested but no task_id for '{result.task_name}'.")
+                    logger.warning(
+                        "Update requested but no task_id provided for '%s' — skipping.",
+                        result.task_name,
+                    )
                     continue
                 self._update_task(result, name_to_email, email_to_id)
 
@@ -53,7 +69,11 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
         response = self._http.post_raw(endpoint, payload)
 
         if response.status_code == 200:
-            print(f"[CREATED] '{result.task_name}' in folder '{result.folder}'")
+            logger.info(
+                "Task created: '%s' in folder '%s'.",
+                result.task_name,
+                result.folder,
+            )
         else:
             raise ClickUpTaskCreateException(
                 f"Failed to create '{result.task_name}' "
@@ -76,7 +96,11 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
         response = self._http.put_raw(endpoint, payload)
 
         if response.status_code == 200:
-            print(f"[UPDATED] '{result.task_name}' (id: {result.task_id})")
+            logger.info(
+                "Task updated: '%s' (id='%s').",
+                result.task_name,
+                result.task_id,
+            )
         else:
             raise ClickUpTaskUpdateException(
                 f"Failed to update '{result.task_name}' id='{result.task_id}' "

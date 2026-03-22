@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pandas as pd
@@ -9,6 +10,9 @@ from src.domain.exceptions.excel_file_not_found_exception import ExcelFileNotFou
 from src.domain.exceptions.excel_missing_columns_exception import ExcelMissingColumnsException
 from src.domain.exceptions.excel_read_exception import ExcelReadException
 from src.domain.ports.output.user_email_repository_port import UserEmailRepositoryPort
+
+
+logger = logging.getLogger(__name__)
 
 
 class ExcelMailReader(UserEmailRepositoryPort):
@@ -37,12 +41,15 @@ class ExcelMailReader(UserEmailRepositoryPort):
                 f"File '{excel_path}' does not exist."
             )
 
+        logger.info("ExcelMailReader initialized with file '%s'.", self.file_path)
+
     def get_username_to_email(self) -> dict:
         """
         Lit le fichier Excel et retourne un dictionnaire {USERNAME: MAIL}.
 
         :return: dict
         """
+        logger.info("Reading username-to-email mapping from '%s'...", self.file_path.name)
         try:
             df = pd.read_excel(self.file_path)
         except Exception as e:
@@ -56,4 +63,12 @@ class ExcelMailReader(UserEmailRepositoryPort):
             )
 
         # Conversion en dictionnaire
-        return dict(zip(df['USERNAME'], df['MAIL']))
+        result = dict(zip(df['USERNAME'], df['MAIL']))
+
+        logger.info(
+            "Username-to-email mapping loaded: %d entry(ies) from '%s'.",
+            len(result),
+            self.file_path.name,
+        )
+
+        return result

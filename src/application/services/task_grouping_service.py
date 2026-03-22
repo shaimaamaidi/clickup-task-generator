@@ -1,6 +1,9 @@
+import logging
 from typing import List, Dict
 from src.domain.models.task_model import Task
 from src.domain.models.generated_task_model import GeneratedTask
+
+logger = logging.getLogger(__name__)
 
 def get_tasks_by_folder(folders) -> Dict[str, List[Task]]:
     result: Dict[str, List[Task]] = {}
@@ -10,6 +13,11 @@ def get_tasks_by_folder(folders) -> Dict[str, List[Task]]:
         for lst in folder.lists:
             tasks.extend(lst.tasks)
         result[folder.name] = tasks
+
+    logger.info(
+        "Existing tasks grouped by folder: %s",
+        {name: len(tasks) for name, tasks in result.items()},
+    )
 
     return result
 
@@ -22,6 +30,11 @@ def get_generated_tasks_by_folder(generated_tasks: List[GeneratedTask]) -> Dict[
         if folder not in result:
             result[folder] = []
         result[folder].append(task)
+
+    logger.info(
+        "Generated tasks grouped by folder: %s",
+        {name: len(tasks) for name, tasks in result.items()},
+    )
 
     return result
 
@@ -79,11 +92,18 @@ def get_folders_statuses_and_priorities(folders) -> Dict[str, Dict[str, List[str
             for priority in lst.priorities:
                 folders_info[folder.name]["priorities"].add(priority)
 
-    # conversion set -> list
-    return {
+    result = {
         folder: {
             "statuses": list(info["statuses"]),
-            "priorities": list(info["priorities"])
+            "priorities": list(info["priorities"]),
         }
         for folder, info in folders_info.items()
     }
+
+    logger.info(
+        "Folders statuses and priorities extracted: %s",
+        {name: {"statuses": data["statuses"], "priorities": data["priorities"]}
+         for name, data in result.items()},
+    )
+
+    return result

@@ -1,3 +1,4 @@
+import logging
 import os
 import requests
 from typing import Any
@@ -6,6 +7,9 @@ from dotenv import load_dotenv
 from src.domain.exceptions.clickup_api_exception import ClickUpApiException
 from src.domain.exceptions.clickup_authentication_exception import ClickUpAuthenticationException
 from src.domain.exceptions.clickup_resource_not_found_exception import ClickUpResourceNotFoundException
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClickUpHttpClient:
@@ -27,27 +31,34 @@ class ClickUpHttpClient:
             "Authorization": api_token,
             "Content-Type": "application/json",
         }
+        logger.info("ClickUpHttpClient initialized successfully.")
+
 
     def get(self, endpoint: str) -> Any:
+        logger.info("GET %s", endpoint)
         response = requests.get(f"{self.BASE_URL}{endpoint}", headers=self._headers)
         self._handle_response(response)
         return response.json()
 
     def post(self, endpoint: str, payload: dict) -> Any:
+        logger.info("POST %s", endpoint)
         response = requests.post(f"{self.BASE_URL}{endpoint}", json=payload, headers=self._headers)
         self._handle_response(response)
         return response.json()
 
     def post_raw(self, endpoint: str, payload: dict) -> requests.Response:
+        logger.info("POST (raw) %s", endpoint)
         response = requests.post(f"{self.BASE_URL}{endpoint}", json=payload, headers=self._headers)
         return response
 
     def put(self, endpoint: str, payload: dict) -> Any:
+        logger.info("PUT %s", endpoint)
         response = requests.put(f"{self.BASE_URL}{endpoint}", json=payload, headers=self._headers)
         self._handle_response(response)
         return response.json()
 
     def put_raw(self, endpoint: str, payload: dict) -> Any:
+        logger.info("PUT (raw) %s", endpoint)
         response = requests.put(f"{self.BASE_URL}{endpoint}", json=payload, headers=self._headers)
         return response
 

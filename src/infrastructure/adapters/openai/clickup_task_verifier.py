@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List
 
 from openai.types.chat import ChatCompletionUserMessageParam, ChatCompletionSystemMessageParam
@@ -11,6 +12,9 @@ from src.domain.models.verification_result_list_model import VerificationResultL
 from src.domain.ports.output.llm_task_verification_port import TaskVerificationPort
 from src.domain.ports.output.prompt_provider_port import PromptProviderPort
 from src.infrastructure.adapters.openai.AzureLLMClient import AzureLLMClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClickUpTaskVerifier(TaskVerificationPort):
@@ -26,7 +30,14 @@ class ClickUpTaskVerifier(TaskVerificationPort):
     ) -> List[VerificationResult]:
 
         if not generated_tasks:
+            logger.warning("No generated tasks to verify — skipping verification.")
             return []
+
+        logger.info(
+            "Starting verification: %d generated task(s) against %d existing task(s).",
+            len(generated_tasks),
+            len(existing_tasks),
+        )
 
         existing_serialized = json.dumps(
             [{"id": t.id, "name": t.name, "description": t.description,
@@ -53,6 +64,12 @@ class ClickUpTaskVerifier(TaskVerificationPort):
             raise LLMResponseException(
                 "The model returned an invalid verification response."
             )
+
+        logger.info(
+            "Verification response received: %d result(s) from LLM.",
+            len(results),
+        )
+
         existing_map = {t.id: t for t in existing_tasks}
         filtered = []
 
@@ -76,8 +93,19 @@ class ClickUpTaskVerifier(TaskVerificationPort):
                     assignee_changed = bool(new_assignees - existing_assignees)
 
                     if not any([status_changed, priority_changed, assignee_changed]):
-                        print(f"[SKIP] No real change for '{result.task_name}'")
+                        logger.warning(
+                            "No real change detected for task '%s' (id='%s') — skipping.",
+                            result.task_name,
+                            result.task_id,
+                        )
                         continue
+
             filtered.append(result)
 
+        logger.info(
+            "Verification complete: %d action(s) to apply (%d create, %d update).",
+            len(filtered),
+            sum(1 for r in filtered if r.action == "create"),
+            sum(1 for r in filtered if r.action == "update"),
+        )
         return filtered

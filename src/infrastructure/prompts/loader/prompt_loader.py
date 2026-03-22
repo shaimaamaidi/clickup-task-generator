@@ -1,4 +1,5 @@
 """Prompt loader for .prompty templates."""
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 import yaml
@@ -9,6 +10,9 @@ from src.domain.exceptions.prompt_invalid_format_exception import PromptInvalidF
 from src.domain.exceptions.prompt_missing_inputs_exception import PromptMissingInputsException
 from src.domain.exceptions.prompt_template_not_found_exception import PromptTemplateNotFoundException
 from src.domain.ports.output.prompt_provider_port import PromptProviderPort
+
+
+logger = logging.getLogger(__name__)
 
 
 class PromptyLoader(PromptProviderPort):
@@ -30,6 +34,7 @@ class PromptyLoader(PromptProviderPort):
             raise PromptTemplateNotFoundException(
                 f"Répertoire de templates introuvable : {self.templates_dir}"
             )
+        logger.info("PromptyLoader initialized with templates_dir='%s'.", self.templates_dir)
 
     @staticmethod
     def _parse_prompty_file(file_path: Path) -> Dict[str, Any]:
@@ -67,6 +72,9 @@ class PromptyLoader(PromptProviderPort):
             raise PromptTemplateNotFoundException(
                 f"Template '{prompt_name}.prompty' introuvable dans {self.templates_dir}"
             )
+
+        logger.info("Loading prompt template '%s.prompty'.", prompt_name)
+
         prompty_data = PromptyLoader._parse_prompty_file(file_path)
         prompt_content = prompty_data['content']
 
@@ -94,7 +102,11 @@ class PromptyLoader(PromptProviderPort):
         )
 
         template = env.from_string(prompt_content)
-        return template.render(**kwargs)
+        rendered = template.render(**kwargs)
+
+        logger.info("Prompt template '%s.prompty' loaded and rendered successfully.", prompt_name)
+
+        return rendered
 
     def get_system_prompt(self, name: str) -> str:
         """Return a system prompt by type.

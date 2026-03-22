@@ -1,0 +1,14 @@
+"""Logger configuration utilities for the application."""
+
+import logging
+
+def setup_logger():
+    """Configure global logging settings for the application.
+
+    :return: None.
+    """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
