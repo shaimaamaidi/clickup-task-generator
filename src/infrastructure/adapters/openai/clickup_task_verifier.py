@@ -3,6 +3,7 @@ from typing import List
 
 from openai.types.chat import ChatCompletionUserMessageParam, ChatCompletionSystemMessageParam
 
+from src.domain.exceptions.llm_response_exception import LLMResponseException
 from src.domain.models.task_model import Task
 from src.domain.models.generated_task_model import GeneratedTask
 from src.domain.models.verification_result_model import VerificationResult
@@ -23,6 +24,10 @@ class ClickUpTaskVerifier(TaskVerificationPort):
         existing_tasks: List[Task],
         generated_tasks: List[GeneratedTask]
     ) -> List[VerificationResult]:
+
+        if not generated_tasks:
+            return []
+
         existing_serialized = json.dumps(
             [{"id": t.id, "name": t.name, "description": t.description,
               "status": t.status, "priority": t.priority, "assignee": t.assignee}
@@ -44,6 +49,10 @@ class ClickUpTaskVerifier(TaskVerificationPort):
         ]
         results = self._llm.parse(messages, response_format=VerificationResultList).results
 
+        if results is None:
+            raise LLMResponseException(
+                "The model returned an invalid verification response."
+            )
         existing_map = {t.id: t for t in existing_tasks}
         filtered = []
 

@@ -3,6 +3,7 @@ from typing import List, Dict
 
 from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 
+from src.domain.exceptions.llm_response_exception import LLMResponseException
 from src.domain.models.generated_task_model import GeneratedTask
 from src.domain.models.response_generator_model import TaskList
 from src.domain.ports.output.llm_task_generation_port import TaskGenerationPort
@@ -47,4 +48,11 @@ class ClickUpTaskGenerator(TaskGenerationPort):
             ChatCompletionSystemMessageParam(role="system", content=self._prompt_provider.get_system_prompt("generation")),
             ChatCompletionUserMessageParam(role="user", content=self._prompt_provider.get_user_prompt("generation", meeting_summary=meeting_summary, folders_text=folders_text))
         ]
-        return self._llm.parse(messages, response_format=TaskList).tasks
+        result = self._llm.parse(messages, response_format=TaskList)
+
+        if not result.tasks:
+            raise LLMResponseException(
+                "The model did not extract any tasks from the meeting summary."
+            )
+
+        return result.task

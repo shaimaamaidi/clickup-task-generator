@@ -13,7 +13,7 @@ from src.application.services.task_grouping_service import get_folders_statuses_
     get_tasks_by_folder
 
 
-class ClickUpTaskPipelineUseCase(MeetingProcessingPort):
+class ProcessMeetingUseCase(MeetingProcessingPort):
     """
     Orchestrateur principal du pipeline.
     Ne connaît que des ports (interfaces abstraites) — jamais les adapters concrets.
@@ -21,22 +21,22 @@ class ClickUpTaskPipelineUseCase(MeetingProcessingPort):
 
     def __init__(
         self,
-        clickup_repository: ClickUpReaderPort,
+        clickup_reader: ClickUpReaderPort,
         task_generator: TaskGenerationPort,
         task_verifier: TaskVerificationPort,
-        task_writer: ClickUpTaskWriterPort,
+        clickup_writer: ClickUpTaskWriterPort,
         email_repository: UserEmailRepositoryPort,
     ):
-        self._clickup_repository = clickup_repository
+        self._clickup_reader = clickup_reader
         self._task_generator = task_generator
         self._task_verifier = task_verifier
-        self._task_writer = task_writer
+        self._clickup_writer = clickup_writer
         self._email_repository = email_repository
 
     def process_meeting(self, space_id: str, meeting_summary: str) -> List[VerificationResult]:
         # 1. Récupérer la structure de l'espace ClickUp
-        self._clickup_repository.set_space_id(space_id)
-        folders: List[Folder] = self._clickup_repository.get_space_structure(space_id)
+        self._clickup_reader.set_space_id(space_id)
+        folders: List[Folder] = self._clickup_reader.get_space_structure(space_id)
 
         # 2. Extraire les statuses/priorités par folder (logique applicative, pas domaine)
         folders_statuses = get_folders_statuses_and_priorities(folders)
@@ -62,10 +62,10 @@ class ClickUpTaskPipelineUseCase(MeetingProcessingPort):
             all_results.extend(results)
 
         name_to_email = self._email_repository.get_username_to_email()
-        memebers = self._clickup_repository.get_workspace_members()
+        memebers = self._clickup_reader.get_workspace_members()
 
 
         # 6. Appliquer les résultats dans ClickUp (create / update / skip)
-        self._task_writer.apply_results(all_results, folders, memebers, name_to_email)
+        self._clickup_writer.apply_results(all_results, folders, memebers, name_to_email)
 
         return all_results

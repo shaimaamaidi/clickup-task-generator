@@ -2,6 +2,9 @@ import os
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
+from src.domain.exceptions.llm_configuration_exception import LLMConfigurationException
+from src.domain.exceptions.llm_response_exception import LLMResponseException
+
 
 class AzureLLMClient:
     """
@@ -26,8 +29,8 @@ class AzureLLMClient:
             }.items() if not val
         ]
         if missing:
-            raise EnvironmentError(
-                f"Variables d'environnement manquantes : {', '.join(missing)}"
+            raise LLMConfigurationException(
+                f"Missing environment variables: {', '.join(missing)}"
             )
 
         self.client = AzureOpenAI(
@@ -41,10 +44,22 @@ class AzureLLMClient:
         Appel structuré avec response_format Pydantic.
         Retourne l'objet parsé directement.
         """
-        response = self.client.chat.completions.parse(
-            model=self.deployment,
-            messages=messages,
-            temperature=temperature,
-            response_format=response_format,
-        )
-        return response.choices[0].message.parsed
+        try:
+            response = self.client.chat.completions.parse(
+                model=self.deployment,
+                messages=messages,
+                temperature=temperature,
+                response_format=response_format,
+            )
+            parsed = response.choices[0].message.parsed
+            if parsed is None:
+                raise LLMResponseException(
+                    "The model returned an empty or non-parseable response."
+                )
+            return parsed
+        except LLMResponseException:
+            raise
+        except Exception as e:
+            raise LLMResponseException(
+                f"Error while calling model '{self.deployment}': {e}"
+            )

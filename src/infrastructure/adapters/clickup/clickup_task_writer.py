@@ -1,5 +1,7 @@
 from typing import List
 
+from src.domain.exceptions.clickup_task_create_exception import ClickUpTaskCreateException
+from src.domain.exceptions.clickup_task_update_exception import ClickUpTaskUpdateException
 from src.domain.models.folder_model import Folder
 from src.domain.services.clickup_helper import priority_to_int, resolve_assignee_ids
 from src.domain.models.verification_result_model import VerificationResult
@@ -53,7 +55,10 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
         if response.status_code == 200:
             print(f"[CREATED] '{result.task_name}' in folder '{result.folder}'")
         else:
-            print(f"[ERROR] Create failed for '{result.task_name}': {response.text}")
+            raise ClickUpTaskCreateException(
+                f"Failed to create '{result.task_name}' "
+                f"(status {response.status_code}) — {response.text}"
+            )
 
     def _update_task(self, result: VerificationResult, name_to_email: dict[str, str], email_to_id: dict[str, int]) -> None:
         endpoint = f"/task/{result.task_id}"
@@ -73,7 +78,10 @@ class ClickUpTaskWriter(ClickUpTaskWriterPort):
         if response.status_code == 200:
             print(f"[UPDATED] '{result.task_name}' (id: {result.task_id})")
         else:
-            print(f"[ERROR] Update failed for '{result.task_name}': {response.text}")
+            raise ClickUpTaskUpdateException(
+                f"Failed to update '{result.task_name}' id='{result.task_id}' "
+                f"(status {response.status_code}) — {response.text}"
+            )
 
     @staticmethod
     def _build_folder_list_map(folders) -> dict:

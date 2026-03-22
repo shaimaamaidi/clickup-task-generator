@@ -5,6 +5,9 @@ import yaml
 import re
 from jinja2 import Environment
 
+from src.domain.exceptions.prompt_invalid_format_exception import PromptInvalidFormatException
+from src.domain.exceptions.prompt_missing_inputs_exception import PromptMissingInputsException
+from src.domain.exceptions.prompt_template_not_found_exception import PromptTemplateNotFoundException
 from src.domain.ports.output.prompt_provider_port import PromptProviderPort
 
 
@@ -24,7 +27,9 @@ class PromptyLoader(PromptProviderPort):
             self.templates_dir = Path(templates_dir)
 
         if not self.templates_dir.exists():
-            raise ValueError(f"Templates directory not found: {self.templates_dir}")
+            raise PromptTemplateNotFoundException(
+                f"Répertoire de templates introuvable : {self.templates_dir}"
+            )
 
     @staticmethod
     def _parse_prompty_file(file_path: Path) -> Dict[str, Any]:
@@ -33,8 +38,9 @@ class PromptyLoader(PromptProviderPort):
 
         parts = content.split('---')
         if len(parts) < 3:
-            raise ValueError(f"Invalid .prompty file format: {file_path}")
-
+            raise PromptInvalidFormatException(
+                f"Format invalide dans '{file_path.name}' — séparateurs '---' manquants."
+            )
         metadata = yaml.safe_load(parts[1])
         prompt_content = '---'.join(parts[2:]).strip()
 
@@ -58,8 +64,9 @@ class PromptyLoader(PromptProviderPort):
         file_path = self.templates_dir / f"{prompt_name}.prompty"
 
         if not file_path.exists():
-            raise FileNotFoundError(f"Prompt file not found: {file_path}")
-
+            raise PromptTemplateNotFoundException(
+                f"Template '{prompt_name}.prompty' introuvable dans {self.templates_dir}"
+            )
         prompty_data = PromptyLoader._parse_prompty_file(file_path)
         prompt_content = prompty_data['content']
 
@@ -69,8 +76,8 @@ class PromptyLoader(PromptProviderPort):
             provided_inputs = set(kwargs.keys())
             missing_inputs = required_inputs - provided_inputs
             if missing_inputs:
-                raise ValueError(
-                    f"Missing required inputs for {prompt_name}: {missing_inputs}"
+                raise PromptMissingInputsException(
+                    f"Variables manquantes pour '{prompt_name}' : {missing_inputs}"
                 )
         env = Environment(
             variable_start_string="[[",

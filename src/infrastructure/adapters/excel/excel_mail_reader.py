@@ -5,6 +5,9 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from src.domain.exceptions.excel_file_not_found_exception import ExcelFileNotFoundException
+from src.domain.exceptions.excel_missing_columns_exception import ExcelMissingColumnsException
+from src.domain.exceptions.excel_read_exception import ExcelReadException
 from src.domain.ports.output.user_email_repository_port import UserEmailRepositoryPort
 
 
@@ -21,9 +24,18 @@ class ExcelMailReader(UserEmailRepositoryPort):
         """
         load_dotenv()
         excel_path = os.getenv("EXCEL_MAIL_PATH")
+
+        if not excel_path:
+            raise ExcelFileNotFoundException(
+                "EXCEL_MAIL_PATH environment variable is missing."
+            )
+
         self.file_path = Path(excel_path)
+
         if not self.file_path.exists():
-            raise FileNotFoundError(f"Le fichier {excel_path} n'existe pas.")
+            raise ExcelFileNotFoundException(
+                f"File '{excel_path}' does not exist."
+            )
 
     def get_username_to_email(self) -> dict:
         """
@@ -33,14 +45,15 @@ class ExcelMailReader(UserEmailRepositoryPort):
         """
         try:
             df = pd.read_excel(self.file_path)
-            # Nettoyage des colonnes pour s'assurer qu'elles existent
-            if 'USERNAME' not in df.columns or 'MAIL' not in df.columns:
-                raise ValueError("Le fichier Excel doit contenir les colonnes 'USERNAME' et 'MAIL'.")
-
-            # Conversion en dictionnaire
-            result = dict(zip(df['USERNAME'], df['MAIL']))
-            return result
-
         except Exception as e:
-            print(f"[ERROR] Impossible de lire le fichier Excel : {e}")
-            return {}
+            raise ExcelReadException(
+                f"Unable to read Excel file '{self.file_path}': {e}"
+            )
+        # Nettoyage des colonnes pour s'assurer qu'elles existent
+        if 'USERNAME' not in df.columns or 'MAIL' not in df.columns:
+            raise ExcelMissingColumnsException(
+                f"File '{self.file_path.name}' must contain 'USERNAME' and 'MAIL' columns."
+            )
+
+        # Conversion en dictionnaire
+        return dict(zip(df['USERNAME'], df['MAIL']))

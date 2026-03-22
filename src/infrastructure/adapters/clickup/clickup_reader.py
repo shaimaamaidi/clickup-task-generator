@@ -1,5 +1,7 @@
 from typing import List
 
+from src.domain.exceptions.clickup_empty_space_exception import ClickUpEmptySpaceException
+from src.domain.exceptions.clickup_workspace_members_exception import ClickUpWorkspaceMembersException
 from src.domain.models.clickup_list_model import ClickUpList
 from src.domain.models.folder_model import Folder
 from src.domain.models.task_model import Task
@@ -24,6 +26,10 @@ class ClickUpReader(ClickUpReaderPort):
         """
 
         folders_data = self._get_folders(space_id)
+        if not folders_data:
+            raise ClickUpEmptySpaceException(
+                f"No folder found in space '{space_id}'."
+            )
         folders: List[Folder] = []
 
         for folder_data in folders_data:
@@ -117,6 +123,10 @@ class ClickUpReader(ClickUpReaderPort):
                         "username": m["user"]["username"],
                         "email": m["user"]["email"]
                     })
-                break
 
+                break
+        if not members:
+            raise ClickUpWorkspaceMembersException(
+                f"Workspace '{self.space_id}' not found or has no members."
+            )
         return members
