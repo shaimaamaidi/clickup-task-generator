@@ -19,10 +19,10 @@ version: 1.0.0
 user:
 Below is the meeting summary.
 
-{meeting_summary}
+{{meeting_summary}}
 
 Available folders and their statuses:
 
-{folders_text}
+{{folders_text}}
 
 Extract all actionable tasks from the meeting summary.

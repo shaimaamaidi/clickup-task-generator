@@ -138,15 +138,14 @@ class ClickUpReader(ClickUpReaderPort):
         members = []
 
         for team in teams:
-            if str(team["id"]) == str(self.space_id):
-                for m in team.get("members", []):
-                    members.append({
-                        "id": m["user"]["id"],
-                        "username": m["user"]["username"],
-                        "email": m["user"]["email"]
-                    })
+            for m in team.get("members", []):
+                members.append({
+                    "id": m["user"]["id"],
+                    "username": m["user"]["username"],
+                    "email": m["user"]["email"]
+                })
 
-                break
+            break
         if not members:
             raise ClickUpWorkspaceMembersException(
                 f"Workspace '{self.space_id}' not found or has no members."
@@ -168,7 +167,7 @@ class ClickUpReader(ClickUpReaderPort):
         Returns:
             Parsed JSON response of folders.
         """
-        return self._http.get(f"/space/{space_id}/folder")
+        return self._http.get(f"/space/{space_id}/folder").get("folders", [])
 
     def _get_lists(self, folder_id: str):
         """Fetch lists for a folder.
@@ -179,7 +178,7 @@ class ClickUpReader(ClickUpReaderPort):
         Returns:
             Parsed JSON response of lists.
         """
-        return self._http.get(f"/folder/{folder_id}/list")
+        return self._http.get(f"/folder/{folder_id}/list").get("lists", [])
 
     def _get_tasks(self, list_id: str):
         """Fetch tasks for a list.
@@ -190,7 +189,7 @@ class ClickUpReader(ClickUpReaderPort):
         Returns:
             Parsed JSON response of tasks.
         """
-        return self._http.get(f"/list/{list_id}/task")
+        return self._http.get(f"/list/{list_id}/task").get("tasks", [])
 
     def _get_list_details(self, list_id: str):
         """Fetch full list details, including statuses and priorities.

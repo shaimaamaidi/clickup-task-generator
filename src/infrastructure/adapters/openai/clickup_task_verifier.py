@@ -77,7 +77,7 @@ class ClickUpTaskVerifier(TaskVerificationPort):
 
         messages = [
             ChatCompletionSystemMessageParam(role="system", content=self._prompt_provider.get_system_prompt("verification")),
-            ChatCompletionUserMessageParam(role="user", content=self._prompt_provider.get_user_prompt("verification", existing_serialized=existing_serialized, generated_serialized=generated_serialized))
+            ChatCompletionUserMessageParam(role="user", content=self._prompt_provider.get_user_prompt("verification", existing_tasks=existing_serialized, generated_tasks=generated_serialized))
         ]
         results = self._llm.parse(messages, response_format=VerificationResultList).results
 

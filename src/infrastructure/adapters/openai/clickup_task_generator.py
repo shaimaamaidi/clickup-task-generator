@@ -55,7 +55,6 @@ class ClickUpTaskGenerator(TaskGenerationPort):
         # Convert the dictionary to JSON text to provide to the LLM
         folders_text = json.dumps(folders_statuses, ensure_ascii=False, indent=2)
 
-
         messages = [
             ChatCompletionSystemMessageParam(role="system", content=self._prompt_provider.get_system_prompt("generation")),
             ChatCompletionUserMessageParam(role="user", content=self._prompt_provider.get_user_prompt("generation", meeting_summary=meeting_summary, folders_text=folders_text))
@@ -69,8 +68,10 @@ class ClickUpTaskGenerator(TaskGenerationPort):
 
         if not result.tasks:
             logger.warning("No tasks extracted from meeting summary.")
-            return []
+            return  []
 
         logger.info("%d task(s) generated from meeting summary.", len(result.tasks))
+        for task in result.tasks:
+            logger.info("Generated task: id=%s", task.folder)
 
-        return result.task
+        return result.tasks
