@@ -83,7 +83,7 @@ Request body:
 ```
 {
   "space_id": "abc123xyz",
-  "meeting_summary": "Summary in Arabic or French"
+  "meeting_summary": "Summary in Arabic"
 }
 ```
 
